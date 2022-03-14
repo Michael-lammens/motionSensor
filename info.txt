@@ -1,0 +1,24 @@
+----------MAC Options For Server Hosting On Local Machine----------
+
+1. MAMP (Mac, Apache, MySQL, PHP)
+2. XAMPP (Cross-Platform, Apache, MySQL, PHP, Perl)
+
+*Recommended*
+3. WAMP (Windows, Apache, MySQL, PHP) with Sequel Pro (Mac Alternative to phpMyAdmin)
+
+----------WAMP Installation----------
+
+https://www.wampserver.com/en/
+
+WAMP will include everything needed to run it (including MySQL and phpMyAdmin)
+
+----------Python and MySQL----------
+
+https://www.freecodecamp.org/news/connect-python-with-sql/
+https://www.w3schools.com/python/python_mysql_getstarted.asp
+
+----------HTML, PHP, and MySQL----------
+
+https://www.w3schools.com/php/php_mysql_intro.asp
+https://docs.microsoft.com/en-us/sql/relational-databases/blob/filestream-sql-server?view=sql-server-ver15
+https://stackoverflow.com/questions/36478158/html5-video-streaming-from-sql-file-stream

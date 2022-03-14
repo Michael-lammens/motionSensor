@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>PJAMP Motion Tracking</title>
+    <style>
+      html, body {
+        margin:0;
+        background-color:black;
+      }
+      video {
+        width:75vw;
+        height:75vh;
+        position:absolute;
+        top:5vh;
+        left:12.5vw;
+      }
+      button {
+        width:6vw;
+        height:6vh;
+        position:absolute;
+        padding:0;
+        border:0.1vw solid gray;
+        background-color:black;
+        color:white;
+        border-radius:7.5%;
+        transition-duration:0.5s;
+      }
+      button:hover {
+        background-color:gray;
+      }
+      button:active {
+        background-color:darkgray;
+      }
+      .disabled {
+        opacity:0.5;
+      }
+      .disabled:hover {
+        background-color:black;
+      }
+      #viewVideo {
+        top:85vh;
+        left:47vw;
+      }
+      #viewImages, #nextImage, #previousImage {
+        top:92vh;
+        left:47vw;
+      }
+      #nextImage {
+        left:54vw;
+      }
+      #previousImage {
+        left:40vw;
+      }
+      #imageMenu {
+        width:50vw;
+        height:75vh;
+        position:absolute;
+        top:5vh;
+        left:25vw;
+        display:none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <video id="videoMenu" controls>
+      <source src="sample.mp4" type="video/mp4">
+      Not Supported In This Browser
+    </video>
+    <img id="imageMenu" src="sample.png">
+
+    <button id="viewVideo" class="disabled" onclick="enableButtons(this)">View Video</button>
+    <button id="viewImages" class="enabled" onclick="enableButtons(this)">View Images</button>
+    <button id="nextImage" class="disabled" onclick="changeImage(this,'next')">Next Image</button>
+    <button id="previousImage" class="disabled" onclick="changeImage(this,'prev')">Previous Image</button>
+
+    <script type="text/javascript">
+      //Enables and Disables Buttons Based On Which Menu Is Open
+      function enableButtons(buttonHTML){
+        swapMenus(buttonHTML);
+        buttonHTML.classList = "disabled";
+
+        if(buttonHTML.id == "viewVideo"){
+          document.getElementById("viewImages").classList = "enabled";
+          document.getElementById("previousImage").classList = "disabled";
+          document.getElementById("nextImage").classList = "disabled";
+        } else if(buttonHTML.id == "viewImages"){
+          document.getElementById("viewVideo").classList = "enabled";
+          document.getElementById("previousImage").classList = "enabled";
+          document.getElementById("nextImage").classList = "enabled";
+        }
+      }
+      //Switches Between Video and Image Menus
+      function swapMenus(buttonHTML){
+        if(buttonHTML.id == "viewVideo" && buttonHTML.classList == "enabled"){
+          document.getElementById("videoMenu").style.display = "block";
+          document.getElementById("imageMenu").style.display = "none";
+          //Plays Video When Back On Video
+          document.getElementById("videoMenu").play();
+        } else if(buttonHTML.id == "viewImages" && buttonHTML.classList == "enabled"){
+          document.getElementById("videoMenu").style.display = "none";
+          document.getElementById("imageMenu").style.display = "block";
+          //Pauses Video While On Images
+          document.getElementById("videoMenu").pause();
+        }
+      }
+      //Navigates Through Selection Of Images
+      function changeImage(buttonHTML, direction){
+        if(direction == "next" && buttonHTML.classList == "enabled"){
+          //Get Info From SQL
+          console.log("Changed To Next Image");
+        } else if(direction == "prev" && buttonHTML.classList == "enabled"){
+          //Get Info From SQL
+          console.log("Changed To Previous Image");
+        }
+      }
+    </script>
+  </body>
+</html>

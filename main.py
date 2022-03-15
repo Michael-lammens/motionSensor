@@ -4,12 +4,11 @@ import numpy as Np
 import cv2
 import sys
 import time
-
-
+valid_run = True
 
 # webcam video detection
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0) # start video capture
 ret, frame2 = cap.read()  # define frame 2 outside of function # will use this frame to compare to frame 1
 
 # get the size of the video
@@ -19,51 +18,77 @@ frame_height = int(cap.get(4))
 frame_size = (frame_width,frame_height)
 
 
-
-
-# learn how to do the video save and save both an image and start recording. once it starts recording, record for 2 seconds
-# break and exit back to the initial movement monitor.
-
-# all files saved to /images can be pushed into SQL.
-
-
 #*****
-# Now find a way to trigger a function that starts recording after the first detected movement for 20 seconds
-# once 20 seconds has passed, return the recording. continue looking for movement from where we left of
+#TODO create text box at top corner to indicate if its recording or not.
+#TODO create a pushToDatabase function that pushes all new recording files to SQL
+#TODO
 
 
-output = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('M','J','P','G'), 20, frame_size)
 start = time.time()
-while True:
+video_num = 0
+def mainThread(vid_num):
+
+    ret, frame2 = cap.read() # define frame 2
+    while True:
 
 
-    ret, frame = cap.read()  # frame is a numpy array of the image, ret = boolean valid or not image
+        ret, frame = cap.read()  # frame is a numpy array of the image, ret = boolean valid or not image
 
-    diff = cv2.absdiff(frame, frame2)  # find the difference between frames
-    gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)  # convert to grayscale
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)  # reduce image noise?
-    _, thresh = cv2.threshold(blur, 20, 255, cv2.THRESH_BINARY)  # convert the image to binary to analyze easier
-    dilated = cv2.dilate(thresh, None, iterations=3)  # dilate the image, not sure why.
+        diff = cv2.absdiff(frame, frame2)  # find the difference between frames
+        gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)  # convert to grayscale
+        blur = cv2.GaussianBlur(gray, (5, 5), 0)  # reduce image noise?
+        _, thresh = cv2.threshold(blur, 20, 255, cv2.THRESH_BINARY)  # convert the image to binary to analyze easier
+        dilated = cv2.dilate(thresh, None, iterations=3)  # dilate the image, not sure why.
 
-    contours, _ = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    for contour in contours:
-        if cv2.contourArea(contour) > 900:
-             # start video capture,
-            output.write(frame)
-            print("start recording now")
+        for contour in contours:
+            if cv2.contourArea(contour) > 900:
+                 # call record function
+                record(vid_num)
+
+        cv2.imshow('frame', frame)  # display the frame
+
+        ret, frame2 = cap.read()  # get the last frame to compare to the next
+        if cv2.waitKey(1) == ord('q'):  # key to break function
+            cap.release()
+            cv2.destroyAllWindows()
+            exit()
 
 
-    cv2.imshow('frame', frame)  # display the frame
-    ret, frame2 = cap.read()  # get the last frame to compare to the next
+def record(vid_num):
+    """
+    Purpose: Once movement was detected, this function starts recording and writes to a new file after x seconds
+        of recording
+        Once recording is done, return back to our main thread to look for new movement.
+    :param vid_num: count the number of times this function has been run(track the next files name)
+    :return: None
+    """
+    vid_num +=1
+    output = cv2.VideoWriter('Images/output{}.avi'.format(vid_num), cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 20, frame_size)
+    start = time.time() # get the start time
+    print("RECORDING*")
+    while True:
+        ret, frame = cap.read()  # frame is a numpy array of the image, ret = boolean valid or not image
+        cv2.imshow('frame', frame)  # display the frame
 
-    if cv2.waitKey(1) == ord('q'):  # key to break function
-        break
+        output.write(frame) # write to our video
 
-cap.release()
-output.release()
-cv2.destroyAllWindows()
 
-stop = time.time()
-print(stop-start)
+        if cv2.waitKey(1) == ord('q'):  # key to break function
+            cap.release()
+            cv2.destroyAllWindows()
+            output.release()
+            exit()
+
+        if time.time() -start > 10:
+            print("RECORDING DONE", vid_num)
+            output.release()
+            mainThread(vid_num)
+
+
+
+
+print("Main gets run")
+mainThread(video_num)
 

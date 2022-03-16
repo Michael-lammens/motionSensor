@@ -6,6 +6,7 @@
       html, body {
         margin:0;
         background-color:black;
+        color:white;
       }
       video {
         width:75vw;
@@ -41,22 +42,22 @@
         top:85vh;
         left:47vw;
       }
-      #viewImages, #nextImage, #previousImage {
+      #viewImages, #next, #prev {
         top:92vh;
         left:47vw;
       }
-      #nextImage {
+      #next {
         left:54vw;
       }
-      #previousImage {
+      #prev {
         left:40vw;
       }
       #imageMenu {
-        width:50vw;
+        width:60vw;
         height:75vh;
         position:absolute;
         top:5vh;
-        left:25vw;
+        left:20vw;
         display:none;
       }
     </style>
@@ -64,15 +65,27 @@
 
   <body>
     <video id="videoMenu" controls>
-      <source src="sample.mp4" type="video/mp4">
-      Not Supported In This Browser
+      <source src="output1.avi" type="video/avi">
+      HTML Video Not Supported In This Browser
     </video>
-    <img id="imageMenu" src="sample.png">
+    <img id="imageMenu" src="image0.jpg">
 
     <button id="viewVideo" class="disabled" onclick="enableButtons(this)">View Video</button>
     <button id="viewImages" class="enabled" onclick="enableButtons(this)">View Images</button>
-    <button id="nextImage" class="disabled" onclick="changeImage(this,'next')">Next Image</button>
-    <button id="previousImage" class="disabled" onclick="changeImage(this,'prev')">Previous Image</button>
+    <button id="next" onclick="change(this,'next')">Next</button>
+    <button id="prev" onclick="change(this,'prev')">Previous</button>
+
+    <?php
+    $servername = "localhost";
+    $username = "root";
+    $password = "";
+    //Create Connection
+    $conn = new mysqli($servername, $username, $password);
+    //Check Connection
+    if($conn->connect_error){
+      die("Connection Failed: " . $conn->connect_error);
+    }
+    ?>
 
     <script type="text/javascript">
       //Enables and Disables Buttons Based On Which Menu Is Open
@@ -82,12 +95,8 @@
 
         if(buttonHTML.id == "viewVideo"){
           document.getElementById("viewImages").classList = "enabled";
-          document.getElementById("previousImage").classList = "disabled";
-          document.getElementById("nextImage").classList = "disabled";
         } else if(buttonHTML.id == "viewImages"){
           document.getElementById("viewVideo").classList = "enabled";
-          document.getElementById("previousImage").classList = "enabled";
-          document.getElementById("nextImage").classList = "enabled";
         }
       }
       //Switches Between Video and Image Menus
@@ -104,14 +113,30 @@
           document.getElementById("videoMenu").pause();
         }
       }
-      //Navigates Through Selection Of Images
-      function changeImage(buttonHTML, direction){
-        if(direction == "next" && buttonHTML.classList == "enabled"){
-          //Get Info From SQL
-          console.log("Changed To Next Image");
-        } else if(direction == "prev" && buttonHTML.classList == "enabled"){
-          //Get Info From SQL
-          console.log("Changed To Previous Image");
+      //Navigates Through Selection Of Images and Videos
+      function change(buttonHTML, direction){
+        var currentImage = document.getElementById("imageMenu").src;
+        currentImage = parseInt(currentImage[currentImage.split(".")[0].length - 1]);
+
+        var currentVideo = document.getElementById("videoMenu").children[0].src;
+        currentVideo = parseInt(currentVideo[currentVideo.split(".")[0].length - 1]);
+
+        if(direction == "next"){
+          if(document.getElementById("viewVideo").classList == "disabled"){
+            var nextVideo = currentVideo + 1;
+            document.getElementById("videoMenu").children[0].src = "output" + nextVideo + ".avi";
+          } else {
+            var nextImage = currentImage + 1;
+            document.getElementById("imageMenu").src = "image" + nextImage + ".jpg";
+          }
+        } else if(direction == "prev"){
+          if(document.getElementById("viewVideo").classList == "disabled" && currentVideo >= 2){
+            var prevVideo = currentVideo - 1;
+            document.getElementById("videoMenu").children[0].src = "output" + prevVideo + ".avi";
+          } else if(currentImage >= 1){
+            var prevImage = currentImage - 1;
+            document.getElementById("imageMenu").src = "image" + prevImage + ".jpg";
+          }
         }
       }
     </script>

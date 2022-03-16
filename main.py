@@ -4,9 +4,28 @@ import numpy as Np
 import cv2
 import sys
 import time
-valid_run = True
+import pymysql
 
-# webcam video detection
+# maintain db connection
+
+# assuming the first run will not be connected. Create connection
+
+try:
+    db = pymysql.connect(user='root',password='password',host='localhost',database="motionDetector")
+    mycursor = db.cursor() # stays global
+except:
+    print("Establishing database connection...")
+    try:
+        db = pymysql.connect(user='root', password='password', host='localhost')
+        mycursor = db.cursor()
+        mycursor.execute("CREATE DATABASE motionDetector")
+        db = pymysql.connect(user='root', password='password', host='localhost',database="motionDetector")
+        # redefine db var and add tables
+        mycursor = db.cursor()
+        mycursor.execute("CREATE TABLE Images (name VARCHAR(50),time smallint UNSIGNED)")
+    except:
+        print("Error creating database...")
+
 
 cap = cv2.VideoCapture(0) # start video capture
 ret, frame2 = cap.read()  # define frame 2 outside of function # will use this frame to compare to frame 1
@@ -21,10 +40,8 @@ frame_size = (frame_width,frame_height)
 #*****
 #TODO create text box at top corner to indicate if its recording or not.
 #TODO create a pushToDatabase function that pushes all new recording files to SQL
-#TODO
 
 
-start = time.time()
 video_num = 0
 def mainThread(vid_num):
 

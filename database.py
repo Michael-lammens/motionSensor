@@ -1,24 +1,10 @@
-import mysql.connector
+import pymysql #Download Here: https://pypi.org/project/PyMySQL/
 
-# connect to database
-db = mysql.connector.connect(
-    host= "localhost",
-    user ="root",
-    passwd="password",
-    database = "motionDetector" # comment this out and run the "CREATE DATABASE" method if yours isnt defined.
-                                # then add it back
-)
-
+db = pymysql.connect(user='root',password='',host='localhost') #,database='motionDetector'
 mycursor = db.cursor()
 
-
-
-
-
-
-
             # Create database if not already defined
-#mycursor.execute("CREATE DATABASE motionDetector)
+#mycursor.execute("CREATE DATABASE motionDetector")
 
             # Creates new table "Images" with the following values
 #mycursor.execute("CREATE TABLE Images (name VARCHAR(50),time smallint UNSIGNED)")

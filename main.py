@@ -22,7 +22,8 @@ except:
         db = pymysql.connect(user='root', password='password', host='localhost',database="motionDetector")
         # redefine db var and add tables
         mycursor = db.cursor()
-        mycursor.execute("CREATE TABLE Images (name VARCHAR(50),time smallint UNSIGNED)")
+        mycursor.execute("CREATE TABLE Images (time VARCHAR(20), thumbnail LONGBLOB, video LONGBLOB, id int PRIMARY KEY AUTO_INCREMENT )")
+        db.commit()
     except:
         print("Error creating database...")
 
@@ -39,7 +40,7 @@ frame_size = (frame_width,frame_height)
 
 #*****
 #TODO create text box at top corner to indicate if its recording or not.
-#TODO create a pushToDatabase function that pushes all new recording files to SQL
+
 
 
 video_num = 0
@@ -72,7 +73,6 @@ def mainThread(vid_num):
             cv2.destroyAllWindows()
             exit()
 
-
 def record(vid_num):
     """
     Purpose: Once movement was detected, this function starts recording and writes to a new file after x seconds
@@ -82,7 +82,7 @@ def record(vid_num):
     :return: None
     """
     vid_num +=1
-    output = cv2.VideoWriter('Images/output{}.avi'.format(vid_num), cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 20, frame_size)
+    output = cv2.VideoWriter('images/output{}.avi'.format(vid_num), cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 20, frame_size)
     start = time.time() # get the start time
     print("RECORDING*")
     while True:
@@ -90,6 +90,8 @@ def record(vid_num):
         cv2.imshow('frame', frame)  # display the frame
 
         output.write(frame) # write to our video
+        thumbnail = cv2.imwrite('images/image{}.png'.format(vid_num),frame)
+        file_path = ('images/image{}.png'.format(vid_num))
 
 
         if cv2.waitKey(1) == ord('q'):  # key to break function
@@ -101,11 +103,62 @@ def record(vid_num):
         if time.time() -start > 10:
             print("RECORDING DONE", vid_num)
             output.release()
+            # get video path
+            video_path = ("images/output{}.avi".format(vid_num))
+            # push to database
+            push_data(file_path,video_path)
+
             mainThread(vid_num)
 
+# create function to push all data to sql
+
+def push_data(photoPath, videoPath):
+    """
+
+    :param time: Time of the video taken ***
+    :param image: Thumbnail of video, first frame # file path
+    :param video: Video file
+    :param name: video{vid_num}
+    :return: Status
+    """
+
+        # convert the image to binary to push
+    with open(photoPath, "rb") as File:
+        binaryImgData = File.read()
+        # convert the video to binary to push
+    with open(videoPath, "rb") as File:
+        binaryVideoData = File.read()
+
+        # get the current time to push
+    t = time.localtime()
+    currentTime = time.strftime("%H:%M:%S", t)
+
+        # push to sql
+    sql_statement = "INSERT INTO Images (time, thumbnail, video) VALUES (%s,%s,%s)"
+    mycursor.execute(sql_statement, (currentTime, binaryImgData, binaryVideoData))
+    db.commit()
 
 
-
-print("Main gets run")
 mainThread(video_num)
+
+
+
+
+
+
+
+# function for testing or if we ever need to return a particular video by id. No use right now
+def retreive_video(id):
+    """
+    Create a local file with the video contents by the videos database id number
+    :param id:
+    :return:
+    """
+    sqlstatement = "SELECT video FROM Images WHERE id = '{0}'"
+    mycursor.execute(sqlstatement.format(id))
+    result = mycursor.fetchone()[0]
+    storefile = "returnedVideo.mp4"
+    with open(storefile, "wb") as File:
+        File.write(result)
+        File.close()
 

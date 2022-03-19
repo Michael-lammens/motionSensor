@@ -5,6 +5,7 @@ import sys
 import time
 import pymysql
 
+timeCap = 10
 # assuming the first run will not be connected. Create connection
 try:
     db = pymysql.connect(user='root',password='password',host='localhost',database="motionDetector")
@@ -34,10 +35,10 @@ frame_size = (frame_width,frame_height)
 
 def mainThread():
     """
-    Purpose: To run a video capture and search for movement. If movement is found, start recording and pass
-    the time, thumbnail image and the video to a sql database.
+    Purpose: To run a video capture and search for movement. If movement is found, call recording function
+    to log the time, thumbnail image and the video to a sql database.
     Pre-conditions: Must have a valid video camera and must be connected to database.
-    Post-conditions: Will push movement data to sql database
+    Post-conditions: Will push movement data to sql database if detected
     :return: None
     """
     vid_num = 0
@@ -53,33 +54,9 @@ def mainThread():
 
         for contour in contours:
             if cv2.contourArea(contour) > 900:
-                # while loop to record and exit on time interval
                 vid_num+=1
-                start = time.time()  # get the start time
-                output = cv2.VideoWriter('images/output{}.avi'.format(vid_num),
-                                         cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 20, frame_size)
-                print("RECORDING*")
-                while True:
-                    ret, frame = cap.read()  # frame is a numpy array of the image, ret = boolean valid or not image
-                    cv2.imshow('frame', frame)  # display the frame
-                    output.write(frame)  # write to our video
-                    thumbnail = cv2.imwrite('images/image{}.png'.format(vid_num), frame)
-                    file_path = ('images/image{}.png'.format(vid_num))
-
-                    if cv2.waitKey(1) == ord('q'):  # key to exit
-                        cap.release()
-                        cv2.destroyAllWindows()
-                        output.release()
-                        exit()
-
-                    if time.time() - start > 10:
-                        print("RECORDING DONE", vid_num)
-                        output.release()
-                        # get video path
-                        video_path = ("images/output{}.avi".format(vid_num))
-                        # push to database
-                        push_data(file_path, video_path)
-                        break
+                # while loop to record and exit on time interval
+                record(vid_num, timeCap)
         cv2.imshow('frame', frame)  # display the frame
         ret, frame2 = cap.read()  # get the last frame to compare to the next
 
@@ -89,6 +66,43 @@ def mainThread():
             exit()
 
 # function to push all data to sql
+def record(vid_num, timeCap):
+    """
+    Purpose: Once movement was detected is the main thread, this function captures x number of seconds of the movement
+    and pushes it to sql. breaking to return back to the main thread.
+    :param vid_num: count the number of times this function has been run(track the next files name)
+    Pre-conditions: Movement has been found in the Mainthread() function
+    Post-conditions: Will capture the video and push to sql. Will return back to mainthread
+    :return: None
+    """
+    output = cv2.VideoWriter('images/output{}.avi'.format(vid_num), cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 20, frame_size)
+    start = time.time() # get the start time
+    print("RECORDING*")
+    print(vid_num)
+    while True:
+        ret, frame = cap.read()  # frame is a numpy array of the image, ret = boolean valid or not image
+        cv2.imshow('frame', frame)  # display the frame
+
+        output.write(frame) # write to our video
+        thumbnail = cv2.imwrite('images/image{}.png'.format(vid_num),frame)
+        file_path = ('images/image{}.png'.format(vid_num))
+
+
+        if cv2.waitKey(1) == ord('q'):  # key to break function
+            cap.release()
+            cv2.destroyAllWindows()
+            output.release()
+            exit()
+
+        if time.time() - start > timeCap:
+            print("RECORDING DONE", vid_num)
+            output.release()
+            # get video path
+            video_path = ("images/output{}.avi".format(vid_num))
+            # push to database
+            push_data(file_path,video_path)
+            break
+
 def push_data(photoPath, videoPath):
     """
 
